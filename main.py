@@ -24,10 +24,43 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=position)
 
     def update(self):
-        self.rect.x += 10  # Move the bullet to the right by 10 pixels
+        self.rect.x += 10  # Moves the bullet to the right by 10 pixels
         if self.rect.left > SCREEN_WIDTH:
             self.kill()
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, position):
+
+        self.original_sheet = pygame.image.load("virus.png")
+        self.frames = [self.original_sheet.subsurface(pygame.Rect(0, 20, 160, 235)),
+                       self.original_sheet.subsurface(pygame.Rect(160, 20, 160, 235)),
+                       self.original_sheet.subsurface(pygame.Rect(320, 20, 160, 235))]
+        self.frames = [pygame.transform.smoothscale(img, (80, 110)) for img in self.frames]
+
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect(topleft=position)
+
+        self.frame = 0
+        self.animation_time = 0
+        self.current_time = 0
+
+        self.velocity = 1  # Define the speed of the movement
+
+    def animate(self):
+        # Update animation every 100 ms
+        self.current_time += 1
+        if self.current_time - self.animation_time > 10:
+            self.animation_time = self.current_time
+            self.frame += 1
+            if self.frame >= len(self.frames):
+                self.frame = 0
+            self.image = self.frames[self.frame]
+
+    def update(self):
+        self.animate()  # Update the frame
+        self.rect.x -= self.velocity  # Move the enemy
+        if self.rect.right < 230:
+            self.rect.left = SCREEN_WIDTH
 class Character(pygame.sprite.Sprite):
     def __init__(self, position):
         self.original_sheet = pygame.image.load("hero.png")
@@ -39,6 +72,28 @@ class Character(pygame.sprite.Sprite):
 
         self.max_y = 340  # Maximum y-coordinate the player can move to
         self.min_y = 100
+
+
+        # self.original_sheet = pygame.image.load("virus.png")
+        # self.sheet.set_clip(pygame.Rect(0, 20, 160, 235))
+        #
+        # # loads spritesheet images
+        # self.image = self.sheet.subsurface(self.sheet.get_clip())
+        # self.rect = self.image.get_rect()
+        #
+        # # position image in the screen surface
+        # self.rect.topleft = position
+        #
+        # # variable for looping the frame sequence
+        # self.frame = 0
+        #
+        # self.rectWidth = 160
+        # self.rectHeight = 235
+        #
+        # self.right_states = {
+        #     1: (0, 20, self.rectWidth, self.rectHeight),
+        #     2: (160, 20, self.rectWidth, self.rectHeight),
+        #     3: (320, 20, self.rectWidth, self.rectHeight)}
 
 
 
@@ -80,6 +135,7 @@ class Character(pygame.sprite.Sprite):
 
 #character position
 player = Character((170, 150))
+enemy = Enemy(position=(750, 200))
 bullet_group = pygame.sprite.Group()
 
 run = True
@@ -94,11 +150,13 @@ while run:
 
     # Update
     bullet_group.update()  # This updates the position of the bullets every frame
+    enemy.update()
 
     # Draw everything
     screen.blit(background, (0, 0))  # Draw the background
     bullet_group.draw(screen)  # Draw all the bullets
     screen.blit(player.image, player.rect)  # Draw the player
+    screen.blit(enemy.image, enemy.rect)
 
     # Update the display
     pygame.display.flip()
