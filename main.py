@@ -1,4 +1,5 @@
 import pygame
+import random
 import player
 
 pygame.init()
@@ -16,6 +17,10 @@ pygame.display.set_caption("Protect the family")
 background = pygame.image.load("background.png")
 background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
+score = 0
+
+font = pygame.font.SysFont(None, 36)
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
@@ -30,12 +35,15 @@ class Bullet(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, position):
+        super().__init__()
 
         self.original_sheet = pygame.image.load("virus.png")
         self.frames = [self.original_sheet.subsurface(pygame.Rect(0, 20, 160, 235)),
                        self.original_sheet.subsurface(pygame.Rect(160, 20, 160, 235)),
                        self.original_sheet.subsurface(pygame.Rect(320, 20, 160, 235))]
         self.frames = [pygame.transform.smoothscale(img, (80, 110)) for img in self.frames]
+
+        self.hit_count = 0
 
         self.image = self.frames[0]
         self.rect = self.image.get_rect(topleft=position)
@@ -60,7 +68,10 @@ class Enemy(pygame.sprite.Sprite):
         self.animate()  # Update the frame
         self.rect.x -= self.velocity  # Move the enemy
         if self.rect.right < 230:
-            self.rect.left = SCREEN_WIDTH
+            global run
+            run = False
+            # show_end_game_text()
+            # self.rect.left = SCREEN_WIDTH
 class Character(pygame.sprite.Sprite):
     def __init__(self, position):
         self.original_sheet = pygame.image.load("hero.png")
@@ -137,6 +148,19 @@ class Character(pygame.sprite.Sprite):
 player = Character((170, 150))
 enemy = Enemy(position=(750, 200))
 bullet_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
+enemy_group.add(enemy)
+
+def show_score():
+    text = font.render(f'Score: {score}', True, (255, 255, 255))
+    screen.blit(text, (SCREEN_WIDTH - 200, 10))
+
+# Function to display the end game text
+def show_end_game_text():
+    text = font.render('GAME OVER! Press SPACE to restart', True, (255, 255, 255))
+    screen.blit(text, (SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2))
+
+
 
 run = True
 while run:
@@ -150,15 +174,45 @@ while run:
 
     # Update
     bullet_group.update()  # This updates the position of the bullets every frame
-    enemy.update()
+    enemy_group.update()
+
+    for bullet in bullet_group:
+        if pygame.sprite.collide_rect(bullet, enemy):
+            bullet.kill()
+            enemy.hit_count += 1
+            if enemy.hit_count > 3:
+                enemy.kill()
+                enemy = Enemy(position=(750, random.choice([100, 200, 300, 400])))
+                enemy_group.add(enemy)
+                score+=1
+
 
     # Draw everything
     screen.blit(background, (0, 0))  # Draw the background
     bullet_group.draw(screen)  # Draw all the bullets
     screen.blit(player.image, player.rect)  # Draw the player
-    screen.blit(enemy.image, enemy.rect)
+    show_score()
+    enemy_group.draw(screen)
+
+    if not run:
+        break
 
     # Update the display
     pygame.display.flip()
+
+# When the game ends
+show_end_game_text()
+pygame.display.flip()
+
+# Wait for the player to press the spacebar to restart the game
+waiting_for_input = True
+while waiting_for_input:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            waiting_for_input = False
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            waiting_for_input = False
+            score = 0  # Reset the score
+            # Restart the game (you would need to reinitialize your game loop here)
 
 pygame.quit()
