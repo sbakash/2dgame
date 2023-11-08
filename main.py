@@ -24,8 +24,9 @@ font = pygame.font.SysFont(None, 36)
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.image = pygame.Surface((20, 10))  # Create a surface for the bullet
-        self.image.fill(("#009df2"))  # Fill the bullet with red color for visibility
+        self.image = pygame.Surface((20, 10))
+        bullet_color=(0,157,242)
+        self.image.fill(bullet_color) # made the bullet as a plain color surface as of now will change it to a image later
         self.rect = self.image.get_rect(center=position)
 
     def update(self):
@@ -52,10 +53,10 @@ class Enemy(pygame.sprite.Sprite):
         self.animation_time = 0
         self.current_time = 0
 
-        self.velocity = 1  # Define the speed of the movement
+        self.velocity = 1  # the speed if enemy is defined 
 
     def animate(self):
-        # Update animation every 100 ms
+        # Updating animation every 100 ms
         self.current_time += 1
         if self.current_time - self.animation_time > 10:
             self.animation_time = self.current_time
@@ -65,8 +66,8 @@ class Enemy(pygame.sprite.Sprite):
             self.image = self.frames[self.frame]
 
     def update(self):
-        self.animate()  # Update the frame
-        self.rect.x -= self.velocity  # Move the enemy
+        self.animate()  # Updating the frame
+        self.rect.x -= self.velocity  # Moving the enemy
         if self.rect.right < 230:
             global run
             run = False
@@ -76,35 +77,12 @@ class Character(pygame.sprite.Sprite):
     def __init__(self, position):
         self.original_sheet = pygame.image.load("hero.png")
         self.image = pygame.transform.smoothscale(self.original_sheet, (100, 125))
-        self.rect = self.image.get_rect()  # Use the scaled image directly
+        self.rect = self.image.get_rect()  
 
-        # position image on the screen surface
         self.rect.topleft = position
 
         self.max_y = 340  # Maximum y-coordinate the player can move to
         self.min_y = 100
-
-
-        # self.original_sheet = pygame.image.load("virus.png")
-        # self.sheet.set_clip(pygame.Rect(0, 20, 160, 235))
-        #
-        # # loads spritesheet images
-        # self.image = self.sheet.subsurface(self.sheet.get_clip())
-        # self.rect = self.image.get_rect()
-        #
-        # # position image in the screen surface
-        # self.rect.topleft = position
-        #
-        # # variable for looping the frame sequence
-        # self.frame = 0
-        #
-        # self.rectWidth = 160
-        # self.rectHeight = 235
-        #
-        # self.right_states = {
-        #     1: (0, 20, self.rectWidth, self.rectHeight),
-        #     2: (160, 20, self.rectWidth, self.rectHeight),
-        #     3: (320, 20, self.rectWidth, self.rectHeight)}
 
 
 
@@ -119,10 +97,10 @@ class Character(pygame.sprite.Sprite):
             self.rect.x = min(800 - self.rect.width, current_x + 20)
 
         if direction == 'up':
-            self.rect.y = max(self.min_y, current_y - 60)  # Restrict movement within the specified range
+            self.rect.y = max(self.min_y, current_y - 60)  # Restricting movement within the specified range
 
         if direction == 'down':
-            self.rect.y = min(self.max_y, current_y + 60)  # Restrict movement within the specified range
+            self.rect.y = min(self.max_y, current_y + 60)  # Restricting movement within the specified range
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -213,6 +191,5 @@ while waiting_for_input:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             waiting_for_input = False
             score = 0  # Reset the score
-            # Restart the game (you would need to reinitialize your game loop here)
-
+            
 pygame.quit()
