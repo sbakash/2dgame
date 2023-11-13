@@ -10,6 +10,9 @@ FPS = 60
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
+show_start_screen =True
+game_active = False
+show_end_screen= False
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Protect the family")
@@ -21,18 +24,21 @@ score = 0
 
 font = pygame.font.SysFont(None, 36)
 
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
         self.image = pygame.Surface((20, 10))
-        bullet_color=(0,157,242)
-        self.image.fill(bullet_color) # made the bullet as a plain color surface as of now will change it to a image later
+        bullet_color = (0, 157, 242)
+        self.image.fill(
+            bullet_color)  # made the bullet as a plain color surface as of now will change it to a image later
         self.rect = self.image.get_rect(center=position)
 
     def update(self):
         self.rect.x += 10  # Moves the bullet to the right by 10 pixels
         if self.rect.left > SCREEN_WIDTH:
             self.kill()
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, position):
@@ -53,7 +59,7 @@ class Enemy(pygame.sprite.Sprite):
         self.animation_time = 0
         self.current_time = 0
 
-        self.velocity = 1  # the speed if enemy is defined 
+        self.velocity = 1  # the speed if enemy is defined
 
     def animate(self):
         # Updating animation every 100 ms
@@ -68,23 +74,18 @@ class Enemy(pygame.sprite.Sprite):
     def update(self):
         self.animate()  # Updating the frame
         self.rect.x -= self.velocity  # Moving the enemy
-        if self.rect.right < 230:
-            global run
-            run = False
-            # show_end_game_text()
-            # self.rect.left = SCREEN_WIDTH
+
+
 class Character(pygame.sprite.Sprite):
     def __init__(self, position):
         self.original_sheet = pygame.image.load("hero.png")
         self.image = pygame.transform.smoothscale(self.original_sheet, (100, 125))
-        self.rect = self.image.get_rect()  
+        self.rect = self.image.get_rect()
 
         self.rect.topleft = position
 
         self.max_y = 340  # Maximum y-coordinate the player can move to
         self.min_y = 100
-
-
 
     def update(self, direction):
         current_x = self.rect.x
@@ -104,17 +105,17 @@ class Character(pygame.sprite.Sprite):
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                self.update('left')
-            if event.key == pygame.K_RIGHT:
-                self.update('right')
-            if event.key == pygame.K_UP:
-                self.update('up')
-            if event.key == pygame.K_DOWN:
-                self.update('down')
-            if event.key == pygame.K_SPACE:
-                new_bullet = Bullet(self.rect.midright)
-                bullet_group.add(new_bullet)
+                if event.key == pygame.K_LEFT:
+                    self.update('left')
+                if event.key == pygame.K_RIGHT:
+                    self.update('right')
+                if event.key == pygame.K_UP:
+                    self.update('up')
+                if event.key == pygame.K_DOWN:
+                    self.update('down')
+                if event.key == pygame.K_SPACE:
+                    new_bullet = Bullet(self.rect.midright)
+                    bullet_group.add(new_bullet)
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
@@ -122,74 +123,90 @@ class Character(pygame.sprite.Sprite):
             if event.key == pygame.K_RIGHT:
                 self.update('stand_right')
 
-#character position
+
+# character position
 player = Character((170, 150))
 enemy = Enemy(position=(750, 200))
 bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 enemy_group.add(enemy)
 
+
 def show_score():
     text = font.render(f'Score: {score}', True, (255, 255, 255))
     screen.blit(text, (SCREEN_WIDTH - 200, 10))
 
-# Function to display the end game text
-def show_end_game_text():
-    text = font.render('GAME OVER! Press SPACE to restart', True, (255, 255, 255))
+def show_start_screen_text():
+    text = font.render('Press SPACE to start the game', True, (255, 255, 255))
     screen.blit(text, (SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2))
 
+# Function to display the end game text
+def show_end_game_text():
+    text = font.render(f'GAME OVER! Your score is {score}.Press SPACE to restart', True, (255, 255, 255))
+    screen.blit(text, (100, SCREEN_HEIGHT // 2))
 
+
+def restart_game():
+    global score, game_active, player, enemy, bullet_group, enemy_group
+    score = 0
+    game_active = True
+
+    player = Character((170, 150))
+    enemy = Enemy(position=(750, 200))
+    bullet_group = pygame.sprite.Group()
+    enemy_group = pygame.sprite.Group()
+    enemy_group.add(enemy)
 
 run = True
 while run:
     clock.tick(FPS)
 
-    # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        player.handle_event(event)
+        if show_start_screen:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    game_active = True
+                    show_start_screen = False
+        elif game_active:
+            player.handle_event(event)
+        elif show_end_screen:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    restart_game()
 
-    # Update
-    bullet_group.update()  # This updates the position of the bullets every frame
-    enemy_group.update()
+    screen.blit(background, (0, 0))  # Always draw the background
 
-    for bullet in bullet_group:
-        if pygame.sprite.collide_rect(bullet, enemy):
-            bullet.kill()
-            enemy.hit_count += 1
-            if enemy.hit_count > 3:
-                enemy.kill()
-                enemy = Enemy(position=(750, random.choice([100, 200, 300, 400])))
-                enemy_group.add(enemy)
-                score+=1
+    if show_start_screen:
+        show_start_screen_text()
+    elif game_active:
+        bullet_group.update()
+        enemy_group.update()
 
+        for bullet in bullet_group:
+            if pygame.sprite.collide_rect(bullet, enemy):
+                bullet.kill()
+                enemy.hit_count += 1
+                if enemy.hit_count > 3:
+                    enemy.kill()
+                    enemy = Enemy(position=(750, random.choice([100, 200, 300, 400])))
+                    enemy_group.add(enemy)
+                    score += 1
 
-    # Draw everything
-    screen.blit(background, (0, 0))  # Draw the background
-    bullet_group.draw(screen)  # Draw all the bullets
-    screen.blit(player.image, player.rect)  # Draw the player
-    show_score()
-    enemy_group.draw(screen)
+        for enemy in enemy_group:
+            if enemy.rect.right < 230:
+                game_active = False
+                show_end_screen = True
+                break
 
-    if not run:
-        break
+        bullet_group.draw(screen)
+        screen.blit(player.image, player.rect)
+        show_score()
+        enemy_group.draw(screen)
+    elif show_end_screen:
+        show_end_game_text()
 
-    # Update the display
     pygame.display.flip()
 
-# When the game ends
-show_end_game_text()
-pygame.display.flip()
-
-# Wait for the player to press the spacebar to restart the game
-waiting_for_input = True
-while waiting_for_input:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            waiting_for_input = False
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            waiting_for_input = False
-            score = 0  # Reset the score
-            
 pygame.quit()
