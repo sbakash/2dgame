@@ -9,7 +9,15 @@ How to Run the game
 
 Currently Completed work and future work
 
-Currently the basic animation of enemy, collision between enemy and bullet and score calculation is done 
+Completed Tasks
+the basic animation of enemy,
+collision between enemy and bullet and score calculation is done,
+completed main boss logic
+completed mini boss logic
+changed the hero sprite 
+Proper restart of game
 
-Future work includes working on the enemy with a different power, using a different algorithm for enemy entrance, Start game screen, Proper restart of game, 
+Future work 
+Start game screen with different image, 
 music and other effects
+and few flaws in current enemy killing 
