@@ -22,6 +22,9 @@ pygame.display.set_caption("Protect the family")
 background = pygame.image.load("background.png")
 background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
+start_screen_image = pygame.image.load("startscreen.png").convert_alpha()
+start_screen_image = pygame.transform.scale(start_screen_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
 score = 0
 
 font = pygame.font.SysFont(None, 36)
@@ -30,10 +33,13 @@ font = pygame.font.SysFont(None, 36)
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.image = pygame.Surface((20, 10))
-        bullet_color = (0, 157, 242)
-        self.image.fill(
-            bullet_color)  # made the bullet as a plain color surface as of now will change it to a image later
+        # self.image = pygame.Surface((20, 10))
+        # bullet_color = (0, 157, 242)
+        # self.image.fill(
+        #     bullet_color)  # made the bullet as a plain color surface as of now will change it to a image later
+        # self.rect = self.image.get_rect(center=position)
+        self.image = pygame.image.load("bullet.png").convert_alpha()
+        self.image = pygame.transform.scale(self.image, (30, 15))
         self.rect = self.image.get_rect(center=position)
 
     def update(self):
@@ -319,7 +325,9 @@ class Character(pygame.sprite.Sprite):
             if event.key == pygame.K_RIGHT:
                 self.update('right')
             if event.key == pygame.K_SPACE:
-                new_bullet = Bullet(self.rect.midright)
+                start_x, start_y = self.rect.midright
+                new_bullet_position = (start_x, start_y - 50)
+                new_bullet = Bullet(new_bullet_position)
                 bullet_group.add(new_bullet)
 
         if event.type == pygame.KEYUP:
@@ -352,8 +360,10 @@ def show_score():
 
 
 def show_start_screen_text():
-    text = font.render('Press SPACE to start the game', True, (255, 255, 255))
-    screen.blit(text, (SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2))
+    # text = font.render('Press SPACE to start the game', True, (255, 255, 255))
+    # screen.blit(text, (SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2))
+    screen.blit(start_screen_image, (0, 0))
+
 
 
 # Function to display the end game text
@@ -433,12 +443,13 @@ while run:
                     enemy.kill()
                     score += 2  # Increase score
                     if score < 8:  # Generate new enemy if score is less than 20
-                        enemy = Enemy(position=(750, random.choice([100, 200, 300, 400])))
+                        enemy = Enemy(position=(750, random.choice([100, 200, 300, 380])))
                         enemy_group.add(enemy)
 
             if pygame.sprite.collide_rect(bullet, main_villian):
                 bullet.kill()
                 main_villian.hit_count += 1
+                score += 1
                 if main_villian.hit_count > 30:
                     main_villian.kill()
                     main_villian.isAlive = False
