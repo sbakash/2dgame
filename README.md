@@ -23,3 +23,4 @@ Future work
 
 music and other effects
 and a few flaws in current enemy killing and score have to be handled
+clean the code and organise the files
