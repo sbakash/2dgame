@@ -13,11 +13,11 @@ Currently Completed work and future work
 Completed Tasks
 the basic animation of the enemy,
 collision between enemy and bullet and score calculation is done,
-completed main boss logic
-completed mini boss logic
-changed the hero sprite 
-A proper restart of game
-Start game screen
+completed main boss logic - 25
+completed mini boss logic - 25
+changed the hero sprite - 20
+A proper restart of game - 15
+Start game screen - 15
 
 Future work 
 
