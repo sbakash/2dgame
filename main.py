@@ -4,6 +4,7 @@ import player
 import time
 
 pygame.init()
+pygame.mixer.init()
 
 clock = pygame.time.Clock()
 
@@ -15,11 +16,21 @@ show_start_screen = True
 game_active = False
 show_end_screen = False
 show_win_screen = False
+create_main_villian = False
+
+start_screen_music = "music/start_screen_music.mp3"
+pygame.mixer.music.load(start_screen_music)
+pygame.mixer.music.play(-1)
+
+gameplay_music = "music/gameplay_music.mp3"
+pygame.mixer.music.stop()
+pygame.mixer.music.load(gameplay_music)
+pygame.mixer.music.play(-1)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Protect the family")
 
-background = pygame.image.load("background.png")
+background = pygame.image.load("newbgg.png")
 background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 start_screen_image = pygame.image.load("startscreen.png").convert_alpha()
@@ -33,11 +44,6 @@ font = pygame.font.SysFont(None, 36)
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        # self.image = pygame.Surface((20, 10))
-        # bullet_color = (0, 157, 242)
-        # self.image.fill(
-        #     bullet_color)  # made the bullet as a plain color surface as of now will change it to a image later
-        # self.rect = self.image.get_rect(center=position)
         self.image = pygame.image.load("bullet.png").convert_alpha()
         self.image = pygame.transform.scale(self.image, (30, 15))
         self.rect = self.image.get_rect(center=position)
@@ -67,9 +73,6 @@ class MiniBoss(pygame.sprite.Sprite):
         # Move the miniboss leftward
         self.rect.x -= self.velocity
 
-        # You can add conditions here to check if the miniboss has reached a certain point
-        # or to change its velocity or direction if needed
-
 
 class MainEnemy(pygame.sprite.Sprite):
     def __init__(self, position):
@@ -82,7 +85,7 @@ class MainEnemy(pygame.sprite.Sprite):
         frame1 = image1.subsurface(pygame.Rect(0, 0, 500, 500))
         frame2 = image2.subsurface(pygame.Rect(0, 0, 500, 500))
 
-        # Scale the subsurfaces if necessary
+        # Scale the subsurfaces as necessary
         scaled_frame1 = pygame.transform.smoothscale(frame1, (200, 200))
         scaled_frame2 = pygame.transform.smoothscale(frame2, (200, 200))
 
@@ -147,6 +150,7 @@ class MainEnemy(pygame.sprite.Sprite):
             self.move()  # Continue with the movement
 
 
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
@@ -182,53 +186,76 @@ class Enemy(pygame.sprite.Sprite):
         self.animate()  # Updating the frame
         self.rect.x -= self.velocity  # Moving the enemy
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, position):
+        super().__init__()
 
-# class Character(pygame.sprite.Sprite):
-#     def __init__(self, position):
-#         self.original_sheet = pygame.image.load("herorestposition.png")
-#         self.image = pygame.transform.smoothscale(self.original_sheet, (100, 125))
-#         self.rect = self.image.get_rect()
-#
-#         self.rect.topleft = position
-#
-#         self.max_y = 340  # Maximum y-coordinate the player can move to
-#         self.min_y = 100
-#
-#     def update(self, direction):
-#         current_x = self.rect.x
-#         current_y = self.rect.y
-#         if direction == 'left':
-#             self.rect.x -= 20
-#             self.rect.x = max(0, current_x - 20)
-#         if direction == 'right':
-#             self.rect.x += 20
-#             self.rect.x = min(800 - self.rect.width, current_x + 20)
-#
-#         if direction == 'up':
-#             self.rect.y = max(self.min_y, current_y - 60)  # Restricting movement within the specified range
-#
-#         if direction == 'down':
-#             self.rect.y = min(self.max_y, current_y + 60)  # Restricting movement within the specified range
-#
-#     def handle_event(self, event):
-#         if event.type == pygame.KEYDOWN:
-#                 if event.key == pygame.K_LEFT:
-#                     self.update('left')
-#                 if event.key == pygame.K_RIGHT:
-#                     self.update('right')
-#                 if event.key == pygame.K_UP:
-#                     self.update('up')
-#                 if event.key == pygame.K_DOWN:
-#                     self.update('down')
-#                 if event.key == pygame.K_SPACE:
-#                     new_bullet = Bullet(self.rect.midright)
-#                     bullet_group.add(new_bullet)
-#
-#         if event.type == pygame.KEYUP:
-#             if event.key == pygame.K_LEFT:
-#                 self.update('stand_left')
-#             if event.key == pygame.K_RIGHT:
-#                 self.update('stand_right')
+        self.original_sheet = pygame.image.load("virus.png")
+        self.frames = [self.original_sheet.subsurface(pygame.Rect(0, 20, 160, 235)),
+                       self.original_sheet.subsurface(pygame.Rect(160, 20, 160, 235)),
+                       self.original_sheet.subsurface(pygame.Rect(320, 20, 160, 235))]
+        self.frames = [pygame.transform.smoothscale(img, (80, 110)) for img in self.frames]
+
+        self.hit_count = 0
+
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect(topleft=position)
+
+        self.frame = 0
+        self.animation_time = 0
+        self.current_time = 0
+
+        self.velocity = 1  # the speed if enemy is defined
+
+    def animate(self):
+        # Updating animation every 100 ms
+        self.current_time += 1
+        if self.current_time - self.animation_time > 10:
+            self.animation_time = self.current_time
+            self.frame += 1
+            if self.frame >= len(self.frames):
+                self.frame = 0
+            self.image = self.frames[self.frame]
+
+    def update(self):
+        self.animate()  # Updating the frame
+        self.rect.x -= self.velocity  # Moving the enemy
+
+class Enemy2(pygame.sprite.Sprite):
+    def __init__(self, position):
+        super().__init__()
+
+        self.original_sheet = pygame.image.load("virus2.png")
+        self.frames = [self.original_sheet.subsurface(pygame.Rect(0, 265, 160, 235)),
+                       self.original_sheet.subsurface(pygame.Rect(160, 265, 160, 235)),
+                       self.original_sheet.subsurface(pygame.Rect(320, 265, 160, 235))]
+        self.frames = [pygame.transform.smoothscale(img, (80, 110)) for img in self.frames]
+
+        self.hit_count = 0
+
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect(topleft=position)
+
+        self.frame = 0
+        self.animation_time = 0
+        self.current_time = 0
+
+        self.velocity = 1.5  # the speed if enemy is defined
+
+    def animate(self):
+        # Updating animation every 100 ms
+        self.current_time += 1
+        if self.current_time - self.animation_time > 10:
+            self.animation_time = self.current_time
+            self.frame += 1
+            if self.frame >= len(self.frames):
+                self.frame = 0
+            self.image = self.frames[self.frame]
+
+    def update(self):
+        self.animate()  # Updating the frame
+        self.rect.x -= self.velocity  # Moving the enemy
+
 class Character(pygame.sprite.Sprite):
     def __init__(self, position):
 
@@ -272,7 +299,7 @@ class Character(pygame.sprite.Sprite):
 
         # if loop index is higher that the size of the frame return to the first frame
         if self.frame > (len(frame_set) - 1):
-            self.frame = 0
+            self.frame = 1
         # print(frame_set[self.frame])
         return frame_set[self.frame]
 
@@ -345,13 +372,8 @@ bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 enemy_group.add(enemy)
 
-main_villian = MainEnemy(position=(600, 200))
-
-# mini_boss = MiniBoss(position=(0, 200))
 mini_boss_group = pygame.sprite.Group()
 
-
-# mini_boss_group.add(mini_boss)
 
 
 def show_score():
@@ -385,6 +407,7 @@ def restart_game():
         game_active = True
         show_end_screen = False
         show_win_screen = False
+        enemy2_exists =False
 
         # Reinitialize player
         player = Character((170, 150))
@@ -394,9 +417,11 @@ def restart_game():
         enemy_group = pygame.sprite.Group()
         enemy_group.add(enemy)
 
+        enemy2_exists = True
+
         # Reinitialize main villain
         main_villian = MainEnemy(position=(600, 200))
-        main_villian.isAlive = False
+        create_main_villian = False
 
         # Clear and reinitialize bullet group
         bullet_group = pygame.sprite.Group()
@@ -413,14 +438,18 @@ while run:
         if event.type == pygame.QUIT:
             run = False
         if show_start_screen:
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     game_active = True
                     show_start_screen = False
         elif game_active:
             player.handle_event(event)
-            main_villian.update()
+
         elif show_end_screen or show_win_screen:
+            if not pygame.mixer.music.get_busy():
+                pygame.mixer.music.load(start_screen_music)
+                pygame.mixer.music.play(-1)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     restart_game()
@@ -428,34 +457,57 @@ while run:
     screen.blit(background, (0, 0))  # Always draw the background
 
     if show_start_screen:
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load(start_screen_music)
+            pygame.mixer.music.play(-1)
         show_start_screen_text()
-    elif game_active:
+
+    if game_active:
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load(gameplay_music)
+            pygame.mixer.music.play(-1)
         bullet_group.update()
         enemy_group.update()
         mini_boss_group.update()
-        main_villian.update()
+
+        if score >= 60 and not create_main_villian:
+            main_villian = MainEnemy(position=(600, 200))
+            create_main_villian = True
+
+        if create_main_villian:
+            main_villian.update()
+            screen.blit(main_villian.image, main_villian.rect)
+            mini_boss_group.update()
+            mini_boss_group.draw(screen)
 
         for bullet in bullet_group:
-            if pygame.sprite.collide_rect(bullet, enemy):
-                bullet.kill()
-                enemy.hit_count += 1
-                if enemy.hit_count > 3:
-                    enemy.kill()
-                    score += 2  # Increase score
-                    if score < 8:  # Generate new enemy if score is less than 20
-                        enemy = Enemy(position=(750, random.choice([100, 200, 300, 380])))
-                        enemy_group.add(enemy)
+            collided_enemy = pygame.sprite.spritecollide(bullet, enemy_group, False)
+            if collided_enemy:
+                bullet.kill()  # Remove the bullet
+                for enemy in collided_enemy:
+                    enemy.hit_count += 1
+                    if enemy.hit_count > 3:
+                        enemy.kill()
+                        score += 4  # Increase score
+                        if score < 20:  # Generate new enemy if score is less than 20
+                            new_enemy = Enemy(position=(750, random.choice([100, 200, 300, 380])))
+                            enemy_group.add(new_enemy)
+                        else:
+                            new_enemy_2 = Enemy2(position=(750, random.choice([100, 200, 300, 380])))
+                            enemy_group.add(new_enemy_2)
 
-            if pygame.sprite.collide_rect(bullet, main_villian):
-                bullet.kill()
-                main_villian.hit_count += 1
-                score += 1
-                if main_villian.hit_count > 30:
-                    main_villian.kill()
-                    main_villian.isAlive = False
-                    show_win_screen = True
-                    game_active = False
-                    score += 20
+
+            if create_main_villian:
+                if pygame.sprite.collide_rect(bullet, main_villian):
+                    bullet.kill()
+                    main_villian.hit_count += 1
+                    score += 3
+                    if main_villian.hit_count > 30:
+                        main_villian.kill()
+                        create_main_villian = False
+                        show_win_screen = True
+                        game_active = False
+                        score += 20
 
             collided_mini_bosses = pygame.sprite.spritecollide(bullet, mini_boss_group, False)
             if collided_mini_bosses:
@@ -466,8 +518,7 @@ while run:
                         mini_boss.kill()  # Remove the mini boss
                         score += 2  # Increase score
 
-            if score >= 8 and not main_villian.isAlive:
-                main_villian.isAlive = True
+
 
         for enemy in enemy_group:
             if enemy.rect.right < 230:
@@ -483,14 +534,12 @@ while run:
 
         bullet_group.draw(screen)
         screen.blit(player.image, player.rect)
-        if main_villian.isAlive:
-            screen.blit(main_villian.image, main_villian.rect)
-            mini_boss_group.update()
-            mini_boss_group.draw(screen)
+
+        enemy_group.draw(screen)
 
 
         show_score()
-        enemy_group.draw(screen)
+
 
 
     elif show_end_screen:
